@@ -26,7 +26,6 @@ public class SyncVerticleTest extends SyncVerticle {
 	int firedCount = 0;
 
 	public SyncVerticleTest(boolean post) {
-
 		factory = new io.vertx.core.buffer.impl.BufferFactoryImpl();
 		this.post = post;
 	}
@@ -34,22 +33,16 @@ public class SyncVerticleTest extends SyncVerticle {
 	@Override
 	@Suspendable
 	public void start() throws InterruptedException, Exception {
-
 		JsonObject config = new JsonObject();
-
 		config.put("virtualHost", "testHost");
 		rmqClient = RabbitMQClient.create(this.vertx, config);
-		rmqClient.start(handle -> {
-		});
-
+		rmqClient.start(handle -> {});
 		client = new RMQClient(vertx, post);
-
 		if (post) {
-			client.post();
+			post();
 		} else {
 			get();
 		}
-
 	}
 
 	@Suspendable
@@ -82,7 +75,6 @@ public class SyncVerticleTest extends SyncVerticle {
 			if ((getCount.incrementAndGet() % 10000) == 0) {
 				logger.info(new Date().toLocaleString() + " : Get Count : " + getCount.get());
 				logger.info("Post Count : " + obj.getString("body"));
-
 			}
 			return;
 		} catch (Exception e) {
@@ -94,7 +86,6 @@ public class SyncVerticleTest extends SyncVerticle {
 	public void post() {
 		final long timerID = vertx.setPeriodic((1), new Handler<Long>() {
 			int count = 0;;
-
 			public void handle(Long timerID) {
 				if (!rmqClient.isConnected()) {
 					return;
@@ -102,32 +93,26 @@ public class SyncVerticleTest extends SyncVerticle {
 				try {
 					basicPost();
 				} catch (Exception e) {
-
 					e.printStackTrace();
 				}
 				if (++count == 1000000) {
 					vertx.cancelTimer(timerID);
-
 				}
 			}
 		});
-
 	}
 
 	@Suspendable
 	public void basicPost() throws InterruptedException, Exception {
 
 		try {
-
 			if (!rmqClient.isConnected()) {
 				return;
 			}
-
 			JsonObject message = new JsonObject().put("body", Long.toString(postCount.incrementAndGet()));
 			rmqClient.basicPublish("", "wbsqtest", message, Sync.fiberHandler(pubResult -> {}));
 		} catch (Exception e) {
 			logger.error(e);
 		}
 	}
-
 }
