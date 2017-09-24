@@ -40,25 +40,27 @@ public class PushServerVerticle extends SyncVerticle {
 	@Suspendable
 	public void start() {
 
-		createWebsocketHandler();
+		
+		BridgeOptions options = new BridgeOptions().addOutboundPermitted(
+				new PermittedOptions().setAddressRegex(""+ "auction\\.[0-9]+"));
+                sockJSHandler = SockJSHandler.create(vertx).bridge(options, new BridgeEventHandler(vertx));
 		vertx.deployVerticle(new BasicVerticle(), new DeploymentOptions().setWorker(true));
 		Router router = Router.router(vertx);
 		router.route("/eventbus/*").handler(sockJSHandler);
 		router.route().failureHandler(errorHandler());
 		router.route().handler(staticHandler());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
-		
+		try {
+			for (int i = 0; i < 5; i++) {
+				vertx.deployVerticle(new SyncVerticleTest(false));
+			}
+			for (int i = 0; i < 5; i++) {
+				vertx.deployVerticle(new SyncVerticleTest(true));
+			}
+		} catch (Exception e1) {
+			logger.error(e1);
+		}	
 	}
-
-	
-	
-    private SockJSHandler createWebsocketHandler() {
-        BridgeOptions options = new BridgeOptions()
-                .addOutboundPermitted(new PermittedOptions().setAddressRegex(""+ "auction\\.[0-9]+"));
-        sockJSHandler = SockJSHandler.create(vertx).bridge(options, new BridgeEventHandler(vertx));
-        return sockJSHandler;
-    }
-
 
     private ErrorHandler errorHandler() {
         return ErrorHandler.create(true);
