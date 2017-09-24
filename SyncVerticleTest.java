@@ -17,16 +17,15 @@ import io.vertx.rabbitmq.RabbitMQClient;
 
 public class SyncVerticleTest extends SyncVerticle {
 
-	BufferFactory factory;
+
 	private static final Logger logger = LoggerFactory.getLogger(SyncVerticleTest.class);
 	boolean post;
 	RabbitMQClient rmqClient;
 	public static AtomicLong getCount = new AtomicLong(0);
 	public static AtomicLong postCount = new AtomicLong(0);
-	int firedCount = 0;
+	
 
 	public SyncVerticleTest(boolean post) {
-		factory = new io.vertx.core.buffer.impl.BufferFactoryImpl();
 		this.post = post;
 	}
 
